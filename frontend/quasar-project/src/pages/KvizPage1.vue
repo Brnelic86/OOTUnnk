@@ -153,7 +153,7 @@ export default {
       document.getElementById("pitanje").append(i);
       document.getElementById("pitanje").append(id);
       const plants = await this.$axios.get(
-      `http://localhost:3000/botanical_family_plant_species/${id}`
+      `http://localhost:4200/botanical_family_plant_species/${id}`
       );
       console.log(plants.data);
       this.plants = plants.data.data;

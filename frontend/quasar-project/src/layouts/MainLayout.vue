@@ -9,13 +9,9 @@
           flat
           icon="directions"
         />
-        <q-toolbar-title class="text-weight-medium text-center text-h3">
-          <q-avatar>
-            <img
-              src="https://ichef.bbci.co.uk/news/976/cpsprodpb/C130/production/_123665494_mediaitem123664184.jpg"
-            />
-          </q-avatar>
-          Dobrodošli u kviz o biljnim vrstama
+        <q-toolbar-title class="text-weight-medium text-center text-h4">
+         
+          Evidencija stručnog usavršavanja
         </q-toolbar-title>
 
         <q-btn
@@ -28,6 +24,14 @@
       </q-toolbar>
     </q-header>
 
+    <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
+      <q-list>
+        <q-item-label header> Izbornik </q-item-label>
+
+        <EssentialLink v-for="link in essentialLinks" :key="link.title" v-bind="link" />
+      </q-list>
+    </q-drawer>
+
     <q-page-container>
       <router-view />
     </q-page-container>
@@ -36,18 +40,45 @@
 
 <script>
 import { defineComponent, ref } from "vue";
-
+import EssentialLink from "components/EssentialLink.vue";
 const linksList = [
   {
-    title: "Link test",
-    caption: "quasar.dev",
-    icon: "school",
-    link: "https://quasar.dev",
+    title: "Profesori",
+    icon: "human",
+    link: "#/profesoriPage",
+    target: "_self",
   },
+  {
+    title: "Stručno usavršavanje",
+    icon: "document",
+    link: "#/usavrsavanje",
+    target: "_self",
+  },
+  {
+    title: "Radovi",
+    icon: "document",
+    link: "#/radovi",
+    target: "_self",
+  },
+  {
+    title: "Erasmus",
+    icon: "document",
+    link: "#/erasmus",
+    target: "_self",
+  },
+  {
+    title: "Kategorizacija rada",
+    icon: "document",
+    link: "#/vrsteMobilnosti",
+    target: "_self",
+  }
 ];
-
 export default defineComponent({
   name: "MainLayout",
+
+  components: {
+    EssentialLink,
+  },
 
   setup() {
     const leftDrawerOpen = ref(false);
