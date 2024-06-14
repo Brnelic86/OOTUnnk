@@ -425,36 +425,21 @@ app.put('/updateProfessor/:ID', function (request, response) {
     });
 });
 
-// Endpoint za brisanje profesora
 app.delete('/deleteProfessor/:ID', function (request, response) {
   const { ID } = request.params;
-  console.log(`Deleting Professor with ID: ${ID}`);
+  console.log(`Deleting Profesor with ID: ${ID}`);
   
-  // Prvo provjeravamo postoje li povezani child zapisi
-  dbConn.query('SELECT COUNT(*) AS count FROM ChildTable WHERE professorID = ?', [ID], function (error, results, fields) {
+  dbConn.query('DELETE FROM Profesor WHERE ID = ?', [ID], function (error, results, fields) {
     if (error) {
       console.error(error);
-      return response.status(500).send({ error: true, message: 'Greška prilikom provjere povezanih zapisa.' });
+      return response.status(500).send({ error: true, message: 'Greška prilikom brisanja profesora.' });
     }
-
-    if (results[0].count > 0) {
-      return response.status(400).send({ error: true, message: 'Nemoguće brisanje profesora zbog povezanih zapisa.' });
+    if (results.affectedRows === 0) {
+      return response.status(404).send({ error: true, message: 'Profesor nije pronađen.' });
     }
-
-    // Ako nema povezanih child zapisa, možemo obrisati profesora
-    dbConn.query('DELETE FROM Profesor WHERE ID = ?', [ID], function (error, results, fields) {
-      if (error) {
-        console.error(error);
-        return response.status(500).send({ error: true, message: 'Greška prilikom brisanja profesora.' });
-      }
-      if (results.affectedRows === 0) {
-        return response.status(404).send({ error: true, message: 'Profesor nije pronađen.' });
-      }
-      return response.send({ error: false, data: results, message: 'Profesor uspješno obrisan.' });
-    });
+    return response.send({ error: false, data: results, message: 'Profesor uspješno obrisan.' });
   });
 });
-
 
 
 /*

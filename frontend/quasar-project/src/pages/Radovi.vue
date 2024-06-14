@@ -127,7 +127,7 @@
       </q-card-section>
 
       <q-card-actions align="right" class="text-primary">
-        <q-btn flat label="Cancel" v-close-popup />
+        <q-btn flat label="Cancel" v-close-popup @click="resetForm" />
         <q-btn flat label="Save" @click="validateForm" />
       </q-card-actions>
     </q-card>
@@ -233,22 +233,27 @@ const validateForm = () => {
 
 const savePost = async () => {
   const newPost = {
-    naziv: nazivUnos.value,
-    opis: opisUnos.value,
-    godina: godinaUnos.value,
+    Naziv: nazivUnos.value,
+    Opis: opisUnos.value,
+    Godina: godinaUnos.value,
     sifra_kategorije: selectedCategory1.value,
-    studenti: studentiUnos.value,
+    Studenti: studentiUnos.value,
     vrstaRecenzije: selectedCategory2.value,
     profesor: selectedCategory3.value
   };
 
-  if (editMode.value) {
-    await axios.put(`http://localhost:4200/radovi/${currentPostId.value}`, newPost);
-  } else {
-    await axios.post("http://localhost:4200/dodajRad", newPost);
+  try {
+    if (editMode.value) {
+      await axios.put(`http://localhost:4200/updateRad/${currentPostId.value}`, newPost);
+    } else {
+      await axios.post("http://localhost:4200/dodajRad", newPost);
+    }
+    getPosts();
+    prompt.value = false;
+    resetForm();
+  } catch (error) {
+    console.error('Error saving post:', error);
   }
-  getPosts();
-  prompt.value = false;
 };
 
 const deletePost = async (id) => {

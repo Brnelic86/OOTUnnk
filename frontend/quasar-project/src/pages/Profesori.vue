@@ -7,11 +7,11 @@
         <q-card-section>
           <div class="text-h6">{{ professor.Ime_Prezime }} </div>
           <div class="text">Datum Rođenja: </div>
-          <div class="text-subtitle2">{{ professor.DatumRodjenja }}</div>
+          <div class="text-subtitle2">{{ professor.Datum_rodenja }}</div>
           <div class="text">OIB: </div>
           <div class="text-subtitle2">{{ professor.OIB }}</div>
           <div class="text">Korisničko Ime: </div>
-          <div class="text-subtitle2">{{ professor.KorisnickoIme }}</div>
+          <div class="text-subtitle2">{{ professor.Korisnicko_ime }}</div>
         </q-card-section>
         <q-separator dark />
         <q-card-actions>
@@ -21,7 +21,7 @@
       </q-card>
     </div>
   </div>
-
+  <!-- Ostali dijelovi predloška ostaju nepromijenjeni -->
   <q-dialog v-model="prompt" persistent>
     <q-card style="min-width: 350px">
       <q-card-section>
@@ -97,6 +97,19 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
+// Formatiraj datum u YYYY-MM-DD format
+const formatDate = (date) => {
+  const d = new Date(date);
+  let month = '' + (d.getMonth() + 1);
+  let day = '' + (d.getDate() + 1);
+  const year = d.getFullYear();
+
+  if (month.length < 2) month = '0' + month;
+  if (day.length < 2) day = '0' + day;
+
+  return [year, month, day].join('-');
+};
+
 const professors = ref([]);
 const prompt = ref(false);
 const showDialog = ref(false);
@@ -125,10 +138,10 @@ const getProfessors = async () => {
 
 const editProfessor = (professor) => {
   currentProfessor.value = professor;
-  imeUnos.value = professor.Ime || '';
-  datumRodjenjaUnos.value = professor.DatumRodjenja || '';
+  imeUnos.value = professor.Ime_Prezime;
+  datumRodjenjaUnos.value = professor.Datum_rodenja || '';
   oibUnos.value = professor.OIB || '';
-  korisnickoImeUnos.value = professor.KorisnickoIme || '';
+  korisnickoImeUnos.value = professor.Korisnicko_ime || '';
   lozinkaUnos.value = professor.Lozinka || '';
   prompt.value = true;
 };
@@ -160,7 +173,7 @@ const saveChanges = async () => {
     const updatedData = {
       ID: currentProfessor.value.ID,
       Ime: imeUnos.value,
-      DatumRodjenja: datumRodjenjaUnos.value,
+      DatumRodjenja: formatDate(datumRodjenjaUnos.value), // Pretvori datum u ispravan format
       OIB: oibUnos.value,
       KorisnickoIme: korisnickoImeUnos.value,
       Lozinka: lozinkaUnos.value
@@ -180,7 +193,7 @@ const saveChanges = async () => {
 const addProfessor = async () => {
   const newProfessor = {
     Ime: imeUnos.value,
-    DatumRodjenja: datumRodjenjaUnos.value,
+    DatumRodjenja: formatDate(datumRodjenjaUnos.value), // Pretvori datum u ispravan format
     OIB: oibUnos.value,
     KorisnickoIme: korisnickoImeUnos.value,
     Lozinka: lozinkaUnos.value
@@ -199,7 +212,32 @@ const addProfessor = async () => {
   }
 };
 
+const canDeleteProfessor = async (id) => {
+  try {
+    const [erasmusResponse, radoviResponse, usavrsavanjeResponse] = await Promise.all([
+      axios.get(`http://localhost:4200/erasmus?profesorId=${id}`),
+      axios.get(`http://localhost:4200/radovi?profesorId=${id}`),
+      axios.get(`http://localhost:4200/strucnoUsavrsavanje?profesorId=${id}`)
+    ]);
+
+    const hasErasmus = erasmusResponse.data.data.some(erasmus => erasmus.ErasmusProfesor === id);
+    const hasRadovi = radoviResponse.data.data.some(rad => rad.RadoviProfesor === id);
+    const hasUsavrsavanje = usavrsavanjeResponse.data.data.some(usavrsavanje => usavrsavanje.UsavrsavanjeProfesor === id);
+
+    return !hasErasmus && !hasRadovi && !hasUsavrsavanje;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};
+
 const deleteProfessor = async (id) => {
+  const canDelete = await canDeleteProfessor(id);
+  if (!canDelete) {
+    alert('Nemoguće izbrisati profesora jer je na njega vezan neki rad, erasmus ili stručno usavršavanje.');
+    return;
+  }
+  
   try {
     await axios.delete(`http://localhost:4200/deleteProfessor/${id}`);
     getProfessors();
